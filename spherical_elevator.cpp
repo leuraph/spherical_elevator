@@ -15,13 +15,13 @@
 
 typedef double data_t;
 
-static const data_t omega = 2. * M_PI * 1.;
+static const data_t omega = 2. * M_PI * 0.5;
 static const data_t R0 = 1.;
 static const data_t l0 = 3.;
 
 static double tmin = 0.;
-static double tmax = 5.;
-static int N = 5000;
+static double tmax = 10.;
+static int N = 10000;
 static data_t g = 9.81;
 
 static double dt = ( tmax - tmin ) / (double)N;
@@ -40,7 +40,7 @@ void acquire_R(data_t* R, const double t)
 void acquire_Rdd(data_t* Rdd, const double t)
 {
 	Rdd[0] = - omega*omega* R0 * std::cos(omega*t);
-	Rdd[1] = 0.;
+	Rdd[1] = - omega*omega* R0 * std::sin(omega*t);
 	Rdd[2] = 0.;
 }
 
@@ -88,14 +88,14 @@ void RHS(const state_type& z, state_type& dzdt, const double t)
     However, it should be more or less intuitive to notice that, if theta==0, seting phi''=0
     comes with no physically relevant implications.
     */
-    if ( std::fmod(z1, M_PI) ==0)
+    if ( std::fmod(z1, M_PI) == 0)
     {
     	dzdt[3] = 0;
     }
     else
     {
         dzdt[3] = 1./l[0]*(
-            - 2.*ld[0]*z2d
+			- 2.*ld[0]*z2d
             - 2.*(1./std::tan(z1))*l[0]*z1d*z2d
             + (1./std::sin(z1))*std::sin(z2)*Rdd[0]
             - std::cos(z2)/std::sin(z1)*Rdd[1]
@@ -123,6 +123,7 @@ int main(int argc, char const *argv[])
 	r = (data_t*)malloc(3*sizeof(data_t));
 	state_type z; // std::vector manages its own memory
 	z.resize(4);
+	z.reserve(4);
 
 	FILE* fdat_R = fopen("results/R.dat", "wb");
 	FILE* fdat_r = fopen("results/r.dat", "wb");
