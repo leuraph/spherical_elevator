@@ -1,3 +1,3 @@
 # spherical_elevator
 
-Boos library can be found on boost.org
+<Boost> library can be found on boost.org
