@@ -33,8 +33,9 @@ def animate(time, r_data, R_data,
     R_line_z.set_data(R_data[time, [0,1]])
     rope_line_z.set_data([r_data[time, 0], R_data[time, 0]], [r_data[time, 1], R_data[time, 1]])
 
-def generate_animation(r, R, filename='animation.gif'):
-    step = int(len(R[:, 0]) / 100)
+def generate_animation(r, R, dt, fps=10, filename='results/animation.gif'):
+    #step = int(len(R[:, 0]) / 100)
+    step = int( 1/(fps*dt) )
     r_migrated=r[::step, :]
     R_migrated=R[::step, :]
     
@@ -46,7 +47,7 @@ def generate_animation(r, R, filename='animation.gif'):
     ax2dx = fig.add_subplot(2, 2, 2)
     ax2dy = fig.add_subplot(2, 2, 3)
     ax2dz = fig.add_subplot(2, 2, 4)
-    twodaxes = [ax2dx, ax2dy, ax2dz]
+    axes2d = [ax2dx, ax2dy, ax2dz] # list of all 2d axes
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
     R_line_3d = ax3d.plot( R_migrated[0:1, 0], R_migrated[0:1, 1], R[0:1, 2], markersize=12, marker='.')[0]
@@ -92,7 +93,7 @@ def generate_animation(r, R, filename='animation.gif'):
     ax3d.set_xlim3d([-lim, lim])
     ax3d.set_ylim3d([-lim, lim])
     ax3d.set_zlim3d([-lim, lim])
-    for ax2d in twodaxes:
+    for ax2d in axes2d:
         ax2d.set_xlim(-lim, lim)
         ax2d.set_ylim(-lim, lim)
 
@@ -106,12 +107,30 @@ def generate_animation(r, R, filename='animation.gif'):
                                        interval=10, blit=False)
 
     # Saving the animation as gif
-    line_ani.save(filename, writer='imagemagick', fps=10)
+    line_ani.save(filename, writer='imagemagick', fps=fps)
 
-R_raw = np.fromfile('results/R.dat', float)
-r_raw = np.fromfile('results/r.dat', float)
 
-R = R_raw.reshape(( int((len(R_raw))/3), 3))
-r = r_raw.reshape(( int((len(r_raw))/3), 3))
 
-generate_animation(r, R, 'test.gif')
+if __name__=="__main__":
+
+    # reading time configuration
+    with open('results/cnfg.dat', 'r') as fdat_cnfg:
+        print("Time configuration given by:")
+        tmin = np.fromfile(fdat_cnfg, float, count=1)[0]
+        print("tmin = "+str(tmin))
+        tmax = np.fromfile(fdat_cnfg, float, count=1)[0]
+        print("tmax = "+str(tmax))
+        dt = np.fromfile(fdat_cnfg, float, count=1)[0]
+        print("dt = "+str(dt))
+        N = np.fromfile(fdat_cnfg, dtype='uint16', count=1)[0]
+        print("N = "+str(N))
+        
+
+    # reading results from test
+    R_raw = np.fromfile('results/R.dat', float)
+    r_raw = np.fromfile('results/r.dat', float)
+    R = R_raw.reshape(( int((len(R_raw))/3), 3))
+    r = r_raw.reshape(( int((len(r_raw))/3), 3))
+    
+    print("Generating animation.gif")
+    generate_animation(r, R, dt, fps=10, filename='results/animation.gif')
